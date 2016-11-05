@@ -1,5 +1,5 @@
 function y=fngaussian(x,c,h,w)
-%% A Gaussian function with center c, height h, and FWHM w
+%% Gaussian function with center c, height h, and FWHM w
 %
 % Copyright: Herianto Lim
 % http://heriantolim.com/

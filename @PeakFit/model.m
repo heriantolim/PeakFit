@@ -21,43 +21,38 @@ function [yModel,yPeak,yBaseline]=model(obj,varargin)
 % Copyright: Herianto Lim
 % http://heriantolim.com/
 % First created: 04/04/2013
-% Last modified: 04/04/2013
+% Last modified: 25/10/2016
 
 yModel=[];
 yPeak=[];
 yBaseline=[];
 
-if obj.NumPeaks==0
-	return
-end
-
-%% Parse Inputs
-numInputs=nargin-1;
-switch numInputs
-	case 0
-		xModel=obj.XData;
-	case 1
-		assert(isrealvector(varargin{1}), ...
-			'PeakFit:PeakFit:model:InvalidInput', ...
-			['Input to the X data points for the model must be a vector of ',...
-				'real numbers.']);
-		xModel=varargin{1}(:)';
-	otherwise
-		error('PeakFit:PeakFit:model:UnexpectedInput',...
-			'One or more inputs are not recognized.');
-end
-xModel=sort(xModel);
-
-%% Initialization
 numPeaks=obj.NumPeaks;
 center=obj.Center;
 height=obj.Height;
 width=obj.Width;
-baseline=obj.Baseline;
+
+if numPeaks==0 || isempty(center) || isempty(height) || isempty(width)
+	return
+end
+
+%% Parse Inputs
+if nargin==1
+	xModel=obj.XData;
+elseif nargin>2
+	error('PeakfFit:model:TooManyInput',...
+		'At most one input argument is accepted.');
+elseif isrealvector(varargin{1})
+	xModel=varargin{1};
+else
+	error('PeakFit:model:InvalidInput',...
+		'Input to the domains for the model must be a vector of real numbers.');
+end
 
 %% Construct Baseline
+baseline=obj.Baseline;
 if obj.BaselinePolyOrder<0 || isempty(baseline)
-	yBaseline=zeros(1,numel(xModel));
+	yBaseline=zeros(size(xModel));
 else
 	yBaseline=polyval(baseline(1,:),xModel);
 end
@@ -65,8 +60,17 @@ end
 %% Construct Peak
 yPeak=cell(1,numPeaks);
 for i=1:numPeaks
-	yPeak{i}=feval(@fnpeak,obj.PeakShape(i),xModel, ...
-		center(1,i),height(1,i),width(1,i));
+	switch obj.PeakShape(i)
+		case 1
+			yPeak{i}=PeakFit.fnlorentzian(xModel,...
+				center(1,i),height(1,i),width(1,i));
+		case 2
+			yPeak{i}=PeakFit.fngaussian(xModel,...
+				center(1,i),height(1,i),width(1,i));
+		otherwise
+			error('PeakFit:model:UnexpectedInput',...
+				'The specified peak shape is not recognized.');
+	end
 end
 
 %% Construct Model

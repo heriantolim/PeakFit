@@ -1,26 +1,58 @@
-classdef PeakFit < handle
+classdef PeakFit
 %% PeakFit Class
 %  Fit a spectral curve with a linear combination of symmetric peak functions,
-%  i.e. Gaussian, Lorentzian, etc. The fitting may include a baseline function
-%  that represents a 'background' contribution to the spectra.
+%  e.g. Gaussian, Lorentzian, etc. A baseline polynomial function may be
+%  included to represent a 'background' contribution to the spectra.
 %
-% Constructor:
-%  obj=peakfit('PropertyName1','PropertyValue1',...),
-%  obj=peakfit(Data,'PropertyName1','PropertyValue1',...), or
-%  obj=peakfit(XData,YData,'PropertyName1','PropertyValue1',...) creates a
-%  PeakFit object with data points specified in {XData, YData} and properties
-%  set using the additional arguments. A m-by-2 or 2-by-n matrix Data can be
-%  used to specify XData and YData. When the data points are given, the returned
-%  object will have fit method executed in the construction.
+% Constructions:
+%  There are two ways to properly construct a PeakFit object.
 %
-% Set-able and Get-able Properties:
+%  The first is by creating an empty PeakFit object and specifying the fitting
+%  parameters via property assignments as follows:
+%  obj=PeakFit();% creates an empty PeakFit
+%  obj.XData=[...];% specify the X data points
+%  obj.YData=[...];% specify the Y data points
+%  obj.CenterStart=[...];% specify the start points of the peaks' center
+%  obj.WidthStart=[...];% specify the start points for the peaks' width
+%
+%  To perform the peak fitting, call another PeakFit with the prepared obj as
+%  the input argument.
+%  obj=PeakFit(obj);
+%
+%  The fit results will be stored in the object properties, which can be
+%  displayed into the console by calling:
+%  disp(obj);
+%
+%  The second is by specifying the data points and fitting parameters together
+%  in one call as follows:
+%  obj=PeakFit(Data,...% specify the XData and YData
+%     Window,[...],...% specify the fit window
+%     CenterLow,[...],...% specify the lower bound for the peaks' center
+%     CenterUp,[...],...% specify the upper bound for the peaks' center
+%     WidthUp,[...],...% specify the upper bound for the peaks' width
+%     BaselinePolyOrder,[.]);% specify the order for the polynomial baseline.
+%  The data points can also be specified in the following way:
+%  obj=PeakFit(XData,YData,...);
+%
+%  When the data points are supplied in the construction of a PeakFit object,
+%  the fitting is automatically performed. The data points are the only
+%  mandatory inputs for a PeakFit object.
+%  
+%  In most cases, specifying the following parameters:
+%  Window, CenterLow, CenterUp, WidthUp, and BaselinePolyOrder,
+%  as given in the last example, is sufficient to enable an accurate fitting.
+%
+% Public Properties:
+%  Data: The data points of the curve. An alternative to XData and YData. Data
+%        must be a two-column or two-row matrix.
 %
 %  XData: The X data points of the curve.
 %
-%  YData: The Y data points of the curve.
+%  YData: The Y data points of the curve. The peak fitting may not properly if
+%         some Y data points are negative.
 %
 %  Window: A vector of length two [a,b] that limits the fitting to only the
-%          data points whose X coordinates lies within [a,b], where a<b.
+%          data points whose X coordinates lies within [a,b].
 %
 %  NumPeaks: The number of peaks wished to be fitted. When the fitting peak
 %            shape, start point, lower, or upper bound are set with vectors of
@@ -40,52 +72,23 @@ classdef PeakFit < handle
 %             'Lorentzian'. If PeakShape contains only one element, then the
 %             default value is the same as that element.
 %
-%  ...Start: A vector of initial values for the ... coefficient. The
-%            default values are determined heuristically. To make certain
+%  ...Start: A vector of initial values for the ... coefficients, where the
+%            blanks are one of the {Area,Center,Width,Height,Baseline}.
+%            The default values are determined heuristically. To make certain
 %            elements default, use NaN. They will be then replaced with the
 %            default values upon fitting.
 %
-%  ...Low: A vector of lower bounds on the ... coefficient to be fitted.
+%  ...Low: A vector of lower bounds on the ... coefficients, where the
+%          blanks are one of the {Area,Center,Width,Height,Baseline}.
 %          The default values are determined heuristically. To make certain
 %          elements default, use -Inf. They will be then replaced with the
 %          default values upon fitting.
 %
-%  ...Up: A vector of upper bounds on the ... coefficient to be fitted.
+%  ...Up: A vector of upper bounds on the ... coefficients, where the
+%         blanks are one of the {Area,Center,Width,Height,Baseline}.
 %         The default values are determined heuristically. To make certain
 %         elements default, use Inf. They will be then replaced with the default
 %         values upon fitting.
-%
-%  Area...: The start points, lower, or upper bounds for the area.
-%
-%  Center...: The start points, lower, or upper bounds for the center. By
-%             default, the start point for the center is determined by finding
-%             the maxima of the curve. When there are more maximas than the
-%             specified NumPeaks, then the best maximas as many as NumPeaks are
-%             selected based on the magnitude of the adjacent gradient. By
-%             default, the lower and upper bounds of the center are the start
-%             point minus and plus the width respectively.
-%
-%  Height...: The start points, lower, or upper bounds for the height. By
-%             default, the upper bounds of the height is the maximum height of
-%             the nearby maximas. The default for the start point is 0.8 of the
-%             upper bounds, and the default for the lower point is 0.05 of the
-%             upper bounds.
-%
-%  Width...: The start points, lower, or upper bounds for the width. By default,
-%            the start point for the width is the range in XData divided by
-%            2*sqrt(NumPeaks). The default for the lower bound is the average of
-%            the difference in XData. The default for the upper bound is twice
-%            the default for the start point.
-%
-%  Baseline...: The start points, lower, or upper bounds for the baseline.
-%
-%  IndependentVar: The independent variable for the fit expression. Defaults to
-%                  'x'.
-%
-%  MovingAvgWidth: An integer that specifies the sample width of the moving
-%                  average to be used for smoothing the curve in order to filter
-%                  noise before finding the maximas. This parameter is used only
-%                  when CenterStart is not given.
 %
 %  Robust: Specifies the robust linear least-squares fitting method to be used.
 %          Avaliable values are 'on', 'off', 'LAR', or 'Bisquare'. The default
@@ -96,6 +99,14 @@ classdef PeakFit < handle
 %  Algorithm: The algorithm used for the fitting procedure. Available values are
 %             'Lavenberg-Marquardt', 'Gauss-Newton', or 'Trust-Region'. The
 %             default is 'Trust-Region'.
+%
+%  MovMeanWidth: The window width of the moving average used for smoothing the
+%                curve in order to filter noise before finding the maximas. This
+%                parameter is used only when CenterStart is not given. The value
+%                of this can be set as a positive integer which specifies the
+%                width in terms of the number of data points, OR a real scalar
+%                between [0,1] which specifies the width in terms of a fraction
+%                of the total number of data points.
 %
 %  DiffMaxChange: The maximum change in coefficients for finite difference
 %                 gradients. The default is 0.1.
@@ -114,7 +125,7 @@ classdef PeakFit < handle
 %  TolX: The termination tolerance on the coefficient values. The default is
 %        10^-6.
 %
-% Get-able Properties:
+% Read-only Properties:
 %  Method: The method used for the fitting, which is 'NonLinearLeastSquares'.
 %
 %  Peak: A struct containing the fit results for each peak.
@@ -122,25 +133,20 @@ classdef PeakFit < handle
 %  Base: A struct containing the fit results for the baseline.
 %
 %  Area, Center, Height, Width, Baseline: A 3-by-NumPeaks matrix to store the
-%        fit results for the area, ... , respectively. The first row is the
+%        fit results for the area,... , respectively. The first row is the
 %        converged values; the second row is the 95% CI lower bounds; and the
 %        third row is the 95% CI upper bounds.
 %
-%  Sse: Sum of Squares Error of the fit results.
+%  RelStDev: Relative Standard Deviation of the fit results.
 %
-%  R2: Coefficient of determination of the fit results.
+%  CoeffDeterm: The coefficient of determination of the fit results.
 %
-%  AdjustedR2: Degree-of-freedom adjusted coefficient of determination of the
-%              fit results.
+%  AdjCoeffDeterm: The degree-of-freedom adjusted coefficient of determination
+%                  of the fit results.
 %
-%  Std: Standard Deviation of the fit results.
+%  NumFunEvals: Number of function evaluations.
 %
-%  FirstOrderOptimality: Measure of the first-order optimality (absolute maximum
-%                        of the gradient components).
-%
-%  Residuals: Vector of residuals.
-%
-%  Jacobian: Jacobian matrix.
+%  NumIters: Number of iterations.
 %
 %  ExitFlag: Describes the exit condition of the algorithm. Positive flags
 %            indicate convergence, within tolerances. Zero flags indicate that
@@ -148,31 +154,28 @@ classdef PeakFit < handle
 %            exceeded. Negative flags indicate that the algorithm did not
 %            converge to a solution.
 %
-%  NumObservations: Number of observations (response values).
-%
-%  NumCoeffs: Number of coeffcients to fit.
-%
-%  NumFunEvals: Number of function evaluations.
-%
-%  NumIters: Number of iterations.
-%
 % Public Methods:
-%  disp: Display the fit options, start point, lower bounds, upper bounds, and
-%        the fit results if any.
+%  disp: Display the options, results, error and performance of the fitting.
 %
-%  set: Set the values of the object properties.
+%  model: Return the reconstructed data points (model) using the fit results.
 %
-%  get: Retrieve the values of the queried properties.
+%  convertunit: Convert the units of the data points and the fit results.
+%               Available units to be converted from or to are:
+%                'eV'        : electron volt
+%                'percm'     : cm^{-1} (wavenumber)
+%                'Ramanshift': cm^{-1} (Raman shift)
+%               When converting to or from Raman shift, an additional argument
+%               is required that specifies the excitation wavelength in nano
+%               meter.
 %
-%  clone: Return an exact copy of the PeakFit object.
+% Static Methods:
+%  fnlorentzian: The lorentzian function.
 %
-%  fit: Perform curve fitting. The results will be stored in the properties.
-%
-%  model: Return the reconstructed data points (a model) using the fit results.
+%  fngaussian: The gaussian function.
 %
 % Requires package:
 %  - Common_v1.0.0+
-%  - Math_v1.0.0+
+%  - PhysConst_v1.0.0+ (for the convertunit method only)
 %
 % Tested on:
 %  - MATLAB R2013b
@@ -181,15 +184,18 @@ classdef PeakFit < handle
 % Copyright: Herianto Lim
 % http://heriantolim.com/
 % First created: 25/03/2013
-% Last modified: 01/05/2016
+% Last modified: 04/11/2016
 
 %% Properties
+% Data, start points, and constraints for fitting
+properties (Dependent=true)
+	Data
+end
 properties
 	XData
 	YData
 	Window
-	NumPeaks
-	BaselinePolyOrder=0;
+	NumPeaks=0;
 	PeakShape
 	AreaStart
 	AreaLow
@@ -203,74 +209,129 @@ properties
 	WidthStart
 	WidthLow
 	WidthUp
-	MovingAvgWidth
+	BaselinePolyOrder=0;
+end
+
+% The start point and constraints for the baseline are set automatically
+properties (SetAccess=protected)
+	BaselineStart
+	BaselineLow
+	BaselineUp
+end
+
+% Fitting options
+properties (Constant=true)
+	Method='NonlinearLeastSquares';
+end
+properties
 	Robust='off';
 	Algorithm='Trust-Region';
+	MovMeanWidth=.02;
 	DiffMaxChange=.1;
 	DiffMinChange=1e-8;
-	MaxFunEvals=50000;
-	MaxIters=10000;
+	MaxFunEvals=1e5;
+	MaxIters=1e3;
 	TolFun=1e-6;
 	TolX=1e-6;
 end
 
-properties %(SetAccess=private)
+% Fit results
+properties (SetAccess=protected)
 	Center
 	Height
 	Width
 	Baseline
 end
-
-properties (Dependent=true,SetAccess=private)
+properties (Dependent=true)
 	Area
 	Peak
 	Base
 end
 
-properties (Constant=true)
-	Method='NonlinearLeastSquares';
-end
-
-properties (SetAccess=private)
-	Sse
-	R2
-	AdjustedR2
-	Std
-	FirstOrderOptimality
-	Residuals
-	Jacobian
-	ExitFlag
-	NumObservations=0;
-	NumCoeffs=0;
+% Fit errors and performance
+properties (SetAccess=protected)
+	RelStDev=0;
+	CoeffDeterm=0;
+	AdjCoeffDeterm=0;
 	NumFunEvals=0;
 	NumIters=0;
+	ExitFlag
 end
 
+% Class dictionary
 properties (Constant=true,GetAccess=protected)
-	PEAK_SHAPE_TABLE=table( ...
-		[1;2], ...
-		{'L';'G'}, ...
-		{'Lorentzian';'Gaussian'}, ...
+	DefaultPeakShape=1;
+	MinNumPoints=10;
+	PeakShapeTable=table(...
+		[1;2],...
+		{'L';'G'},...
+		{'Lorentzian';'Gaussian'},...
 		'VariableNames',{'ID','Initial','Name'});
-	ROBUST_LIST={'on','off','LAR','Bisquare'};
-	ALGORITHM_LIST={'Levenberg-Marquardt','Gauss-Newton','Trust-Region'};
+	RobustList={'on','off','LAR','Bisquare'};
+	AlgorithmList={'Levenberg-Marquardt','Trust-Region'};
 end
 
 %% Methods
 methods
 	% Constructor
 	function obj=PeakFit(varargin)
-		obj.set(varargin{:});
-		try
-			obj.fit;
-		catch exception
-			if ~strcmp(exception.identifier,'PeakFit:PeakFit:fit:MissingData')
-				throw(exception);
+		N=nargin;
+		if N==0
+			return
+		end
+		
+		% Copy the PeakFit object given in the first argument if any
+		k=1;
+		if isa(varargin{k},class(obj))
+			obj=varargin{k};
+			k=k+1;
+		end
+		
+		% Parse input to Data points
+		if k<=N && isrealmatrix(varargin{k})
+			if isvector(varargin{k})
+				if k<N && isrealvector(varargin{k+1})
+					obj.XData=varargin{k};
+					obj.YData=varargin{k+1};
+					k=k+2;
+				end
+			else
+				obj.Data=varargin{k};
+				k=k+1;
 			end
+		end
+		
+		% Parse inputs to the parameters
+		P=properties(obj);
+		while k<N
+			if ~isstringscalar(varargin{k})
+				break
+			end
+			ix=strcmpi(varargin{k},P);
+			if any(ix)
+				obj.(P{ix})=varargin{k+1};
+				k=k+2;
+			else
+				break
+			end
+		end
+		assert(k>N,...
+			'PeakFit:UnexpectedInput',...
+			'One or more inputs are not recognized.');
+		
+		% Perform peak fitting
+		obj=fit(obj);
+	end
+
+	% Get Methods
+	function x=get.Data(obj)
+		if numel(obj.XData)==numel(obj.YData)
+			x=[obj.XData;obj.YData];
+		else
+			x=[];
 		end
 	end
 	
-	% Get Methods
 	function x=get.Area(obj)
 		peakShape=obj.PeakShape;
 		height=obj.Height;
@@ -281,11 +342,11 @@ methods
 			numPeaks=numel(peakShape);
 			x=zeros(3,numPeaks);
 			for i=1:numPeaks
-				x(:,i)=computepeakarea(peakShape{i},height(:,i),width(:,i));
+				x(:,i)=PeakFit.computearea(peakShape(i),height(:,i),width(:,i));
 			end
 		end
 	end
-	
+
 	function x=get.Peak(obj)
 		x=struct();
 		area=obj.Area;
@@ -293,111 +354,137 @@ methods
 		height=obj.Height;
 		width=obj.Width;
 		if isempty(area) || isempty(center) || isempty(height) || isempty(width)
-			warning('PeakFit:PeakFit:getPeak:MissingData', ...
-				'Curve fitting has not been performed, call the fit method first.');
-		else
-			numPeaks=obj.NumPeaks;
-			for i=1:numPeaks
-				x(i).Area.Value=area(1,i);
-				x(i).Area.CI=area(2:3,i)';
-				x(i).Center.Value=center(1,i);
-				x(i).Center.CI=center(2:3,i)';
-				x(i).Height.Value=height(1,i);
-				x(i).Height.CI=height(2:3,i)';
-				x(i).Width.Value=width(1,i);
-				x(i).Width.CI=width(2:3,i)';
-			end
+			return
+		end
+		numPeaks=obj.NumPeaks;
+		for i=1:numPeaks
+			x(i).Area.Value=area(1,i);
+			x(i).Area.CI=area(2:3,i).';
+			x(i).Center.Value=center(1,i);
+			x(i).Center.CI=center(2:3,i).';
+			x(i).Height.Value=height(1,i);
+			x(i).Height.CI=height(2:3,i).';
+			x(i).Width.Value=width(1,i);
+			x(i).Width.CI=width(2:3,i).';
 		end
 	end
-	
+
 	function x=get.Base(obj)
 		x=struct();
 		baseline=obj.Baseline;
 		if ~isempty(baseline)
-			baselinePolyOrder=obj.BaselinePolyOrder;
-			for i=1:baselinePolyOrder+1
+			P=obj.BaselinePolyOrder;
+			Q=P+1;
+			for i=1:Q
 				x.(sprintf('p%d',i)).Value=baseline(1,i);
-				x.(sprintf('p%d',i)).Value=baseline(2:3,i)';
+				x.(sprintf('p%d',i)).CI=baseline(2:3,i).';
 			end
 		end
 	end
-	
+
 	% Set Methods
-	function set.XData(obj,x)
+	function obj=set.Data(obj,x)
 		if isempty(x)
 			obj.XData=[];
-		elseif isrealvector(x)
-			obj.XData=x(:)';
+			obj.YData=[];
+			return
+		end
+		ME=MException('PeakFit:InvalidInput',...
+			'Input to set the Data must be a real matrix of size [n,2] or [2,n].');
+		if isrealmatrix(x)
+			[m,n]=size(x);
+			if m==2
+				obj.XData=x(1,:);
+				obj.YData=x(2,:);
+			elseif n==2
+				obj.XData=x(:,1);
+				obj.YData=x(:,2);
+			else
+				throw(ME);
+			end
 		else
-			error('PeakFit:PeakFit:setXData:InvalidInput', ...
-				'Input to set the XData must be a vector of real numbers.');
+			throw(ME);
 		end
 	end
 	
-	function set.YData(obj,x)
+	function obj=set.XData(obj,x)
+		if isempty(x)
+			obj.XData=[];
+		elseif isrealvector(x) && all(isfinite(x))
+			if numel(x)<obj.MinNumPoints
+				error('PeakFit:setXData:InsufficientNumPoints',...
+					'Input vector to the XData must have at least %d elements.',...
+					obj.MinNumPoints);
+			else
+				obj.XData=x(:).';
+			end
+		else
+			error('PeakFit:setXData:InvalidInput',...
+				'Input to set the XData must be a vector of finite real numbers.');
+		end
+	end
+
+	function obj=set.YData(obj,x)
 		if isempty(x)
 			obj.YData=[];
-		elseif isrealvector(x)
-			obj.YData=x(:)';
+		elseif isrealvector(x) && all(isfinite(x))
+			if numel(x)<obj.MinNumPoints
+				error('PeakFit:setYData:InsufficientNumPoints',...
+					'Input vector to the YData must have at least %d elements.',...
+					obj.MinNumPoints);
+			else
+				obj.YData=x(:).';
+			end
 		else
-			error('PeakFit:PeakFit:setYData:InvalidInput', ...
-				'Input to set the YData must be a vector of real numbers.');
+			error('PeakFit:setYData:InvalidInput',...
+				'Input to set the YData must be a vector of finite real numbers.');
 		end
 	end
-	
-	function set.Window(obj,x)
+
+	function obj=set.Window(obj,x)
 		if isempty(x)
 			obj.Window=[];
 		elseif isrealvector(x) && numel(x)==2
-			obj.Window=x(:)';
+			obj.Window=sort(x(:)).';
 		else
-			error('PeakFit:PeakFit:setWindow:InvalidInput', ...
+			error('PeakFit:setWindow:InvalidInput',...
 				'Input to set the Window must be a real vector of length two.');
 		end
 	end
-	
-	function set.NumPeaks(obj,x)
+
+	function obj=set.NumPeaks(obj,x)
 		if isintegerscalar(x) && x>=0
 			obj.NumPeaks=x;
 		else
-			error('PeakFit:PeakFit:setNumPeaks:InvalidInput', ...
+			error('PeakFit:setNumPeaks:InvalidInput',...
 				'Input to set the NumPeaks must be a positive integer scalar.');
 		end
 	end
-	
-	function set.BaselinePolyOrder(obj,x)
-		if isintegerscalar(x)
-			obj.BaselinePolyOrder=x;
-		else
-			error('PeakFit:PeakFit:setBaselinePolyOrder:InvalidInput', ...
-				'Input to set the BaselinePolyOrder must be an integer scalar.');
-		end
-	end
-	
-	function set.PeakShape(obj,x)
+
+	function obj=set.PeakShape(obj,x)
 		if isempty(x)
 			obj.PeakShape=[];
 		elseif isintegervector(x)
-			obj.PeakShape=x(:)';
+			obj.PeakShape=x(:).';
 		else
 			if isstringscalar(x)
 				x={x};
 			elseif ~isstringvector(x)
-				error('PeakFit:PeakFit:setPeakShape:InvalidInput',...
+				error('PeakFit:setPeakShape:InvalidInput',...
 					'Input to PeakShape must be a string scalar or vector.');
 			end
-			ME=MException('PeakFit:PeakFit:setPeakShape:UnexpectedInput', ...
-				'The specified peak shape has not been defined in the code.');
+			ME=MException('PeakFit:setPeakShape:UnexpectedInput',...
+				'The specified peak shape has not been defined in this class.');
 			N=numel(x);
 			y=zeros(1,N);
 			for n=1:N
-				if numel(x(n))==1
-					tf=strcmpi(x(n),obj.PEAK_SHAPE_TABLE.Initial);
+				if numel(x{n})==1
+					tf=strcmpi(x{n},obj.PeakShapeTable.Initial);
 				else
-					tf=strcmpi(x(n),obj.PEAK_SHAPE_TABLE.Name);
+					tf=strcmpi(x{n},obj.PeakShapeTable.Name);
 				end
 				if any(tf)
-					y(n)=obj.PEAK_SHAPE_TABLE.ID(tf);
+					y(n)=obj.PeakShapeTable.ID(tf);
 				else
 					throw(ME);
 				end
@@ -405,158 +492,192 @@ methods
 			obj.PeakShape=y;
 		end
 	end
-	
-	function set.AreaStart(obj,x)
+
+	function obj=set.AreaStart(obj,x)
 		if isempty(x)
 			obj.AreaStart=[];
 		elseif isrealvector(x)
-			obj.AreaStart=x(:)';
+			obj.AreaStart=x(:).';
 		else
-			error('PeakFit:PeakFit:setAreaStart:InvalidInput',...
+			error('PeakFit:setAreaStart:InvalidInput',...
 				'Input to set the AreaStart must be a vector of real numbers.');
 		end
 	end
-    
-	function set.AreaLow(obj,x)
+
+	function obj=set.AreaLow(obj,x)
 		if isempty(x)
 			obj.AreaLow=[];
 		elseif isrealvector(x)
-			obj.AreaLow=x(:)';
+			obj.AreaLow=x(:).';
 		else
-			error('PeakFit:PeakFit:setAreaLow:InvalidInput',...
+			error('PeakFit:setAreaLow:InvalidInput',...
 				'Input to set the AreaLow must be a vector of real numbers.');
 		end
 	end
-	
-	function set.AreaUp(obj,x)
+
+	function obj=set.AreaUp(obj,x)
 		if isempty(x)
 			obj.AreaUp=[];
 		elseif isrealvector(x)
-			obj.AreaUp=x(:)';
+			obj.AreaUp=x(:).';
 		else
-			error('PeakFit:PeakFit:setAreaUp:InvalidInput',...
+			error('PeakFit:setAreaUp:InvalidInput',...
 				'Input to set the AreaUp must be a vector of real numbers.');
 		end
 	end
-	
-	function set.CenterStart(obj,x)
+
+	function obj=set.CenterStart(obj,x)
 		if isempty(x)
 			obj.CenterStart=[];
 		elseif isrealvector(x)
-			obj.CenterStart=x(:)';
+			obj.CenterStart=x(:).';
 		else
-			error('PeakFit:PeakFit:setCenterStart:InvalidInput',...
+			error('PeakFit:setCenterStart:InvalidInput',...
 				'Input to set the CenterStart must be a vector of real numbers.');
 		end
 	end
-    
-	function set.CenterLow(obj,x)
+
+	function obj=set.CenterLow(obj,x)
 		if isempty(x)
 			obj.CenterLow=[];
 		elseif isrealvector(x)
-			obj.CenterLow=x(:)';
+			obj.CenterLow=x(:).';
 		else
-			error('PeakFit:PeakFit:setCenterLow:InvalidInput',...
+			error('PeakFit:setCenterLow:InvalidInput',...
 				'Input to set the CenterLow must be a vector of real numbers.');
 		end
 	end
-	
-	function set.CenterUp(obj,x)
+
+	function obj=set.CenterUp(obj,x)
 		if isempty(x)
 			obj.CenterUp=[];
 		elseif isrealvector(x)
-			obj.CenterUp=x(:)';
+			obj.CenterUp=x(:).';
 		else
-			error('PeakFit:PeakFit:setCenterUp:InvalidInput',...
+			error('PeakFit:setCenterUp:InvalidInput',...
 				'Input to set the CenterUp must be a vector of real numbers.');
 		end
 	end
-	
-	function set.HeightStart(obj,x)
+
+	function obj=set.HeightStart(obj,x)
 		if isempty(x)
 			obj.HeightStart=[];
 		elseif isrealvector(x)
-			obj.HeightStart=x(:)';
+			obj.HeightStart=x(:).';
 		else
-			error('PeakFit:PeakFit:setHeightStart:InvalidInput',...
+			error('PeakFit:setHeightStart:InvalidInput',...
 				'Input to set the HeightStart must be a vector of real numbers.');
 		end
 	end
-    
-	function set.HeightLow(obj,x)
+
+	function obj=set.HeightLow(obj,x)
 		if isempty(x)
 			obj.HeightLow=[];
 		elseif isrealvector(x)
-			obj.HeightLow=x(:)';
+			obj.HeightLow=x(:).';
 		else
-			error('PeakFit:PeakFit:setHeightLow:InvalidInput',...
+			error('PeakFit:setHeightLow:InvalidInput',...
 				'Input to set the HeightLow must be a vector of real numbers.');
 		end
 	end
-	
-	function set.HeightUp(obj,x)
+
+	function obj=set.HeightUp(obj,x)
 		if isempty(x)
 			obj.HeightUp=[];
 		elseif isrealvector(x)
-			obj.HeightUp=x(:)';
+			obj.HeightUp=x(:).';
 		else
-			error('PeakFit:PeakFit:setHeightUp:InvalidInput',...
+			error('PeakFit:setHeightUp:InvalidInput',...
 				'Input to set the HeightUp must be a vector of real numbers.');
 		end
 	end
-	
-	function set.WidthStart(obj,x)
+
+	function obj=set.WidthStart(obj,x)
 		if isempty(x)
 			obj.WidthStart=[];
-		elseif isrealvector(x)
-			obj.WidthStart=x(:)';
+		elseif isrealvector(x) && all(isnan(x) | x>=0)
+			obj.WidthStart=x(:).';
 		else
-			error('PeakFit:PeakFit:setWidthStart:InvalidInput',...
-				'Input to set the WidthStart must be a vector of real numbers.');
+			error('PeakFit:setWidthStart:InvalidInput',...
+				['Input to set the WidthStart must be a vector of positive ',...
+					'real numbers.']);
 		end
 	end
-    
-	function set.WidthLow(obj,x)
+
+	function obj=set.WidthLow(obj,x)
 		if isempty(x)
 			obj.WidthLow=[];
-		elseif isrealvector(x)
-			obj.WidthLow=x(:)';
+		elseif isrealvector(x) && all(isnan(x) | x>=0)
+			obj.WidthLow=x(:).';
 		else
-			error('PeakFit:PeakFit:setWidthLow:InvalidInput',...
-				'Input to set the WidthLow must be a vector of real numbers.');
+			error('PeakFit:setWidthLow:InvalidInput',...
+				['Input to set the WidthLow must be a vector of positive real ',...
+					'numbers.']);
 		end
 	end
-	
-	function set.WidthUp(obj,x)
+
+	function obj=set.WidthUp(obj,x)
 		if isempty(x)
 			obj.WidthUp=[];
-		elseif isrealvector(x)
-			obj.WidthUp=x(:)';
+		elseif isrealvector(x) && all(isnan(x) | x>=0)
+			obj.WidthUp=x(:).';
 		else
-			error('PeakFit:PeakFit:setWidthUp:InvalidInput',...
-				'Input to set the WidthUp must be a vector of real numbers.');
+			error('PeakFit:setWidthUp:InvalidInput',...
+				['Input to set the WidthUp must be a vector of positive real ',...
+					'numbers.']);
 		end
 	end
-	
-	function set.MovingAvgWidth(obj,x)
+
+	function obj=set.BaselinePolyOrder(obj,x)
+		if isintegerscalar(x)
+			obj.BaselinePolyOrder=x;
+		else
+			error('PeakFit:setBaselinePolyOrder:InvalidInput',...
+				'Input to set the BaselinePolyOrder must be an integer scalar.');
+		end
+	end
+
+	function obj=set.BaselineStart(obj,x)
 		if isempty(x)
-			obj.MovingAvgWidth=[];
-		elseif isintegerscalar(x)
-			obj.MovingAvgWidth=x;
+			obj.BaselineStart=[];
+		elseif isrealvector(x)
+			obj.BaselineStart=x(:).';
 		else
-			error('PeakFit:PeakFit:setMovingAvgWidth:InvalidInput',...
-				'Input to set the MovingAvgWidth must be an integer scalar.');
+			error('PeakFit:setBaselineStart:InvalidInput',...
+				'Input to set the BaselineStart must be a vector of real numbers.');
+		end
+	end
+
+	function obj=set.BaselineLow(obj,x)
+		if isempty(x)
+			obj.BaselineLow=[];
+		elseif isrealvector(x)
+			obj.BaselineLow=x(:).';
+		else
+			error('PeakFit:setBaselineLow:InvalidInput',...
+				'Input to set the BaselineLow must be a vector of real numbers.');
+		end
+	end
+
+	function obj=set.BaselineUp(obj,x)
+		if isempty(x)
+			obj.BaselineUp=[];
+		elseif isrealvector(x)
+			obj.BaselineUp=x(:).';
+		else
+			error('PeakFit:setBaselineUp:InvalidInput',...
+				'Input to set the BaselineUp must be a vector of real numbers.');
 		end
 	end
 	
-	function set.Robust(obj,x)
-		ME=MException('PeakFit:PeakFit:setRobust:InvalidInput',...
-			['Input to set the Robust must be either: ', ...
-				strjoin(obj.ROBUST_LIST,', '),'.']);
+	function obj=set.Robust(obj,x)
+		ME=MException('PeakFit:setRobust:InvalidInput',...
+			'Input to set the Robust must be either: %s.',...
+			strjoin(obj.RobustList,', '));
 		if isstringscalar(x)
-			tf=strcmpi(x,obj.ROBUST_LIST);
+			tf=strcmpi(x,obj.RobustList);
 			if any(tf)
-				obj.Robust=obj.ROBUST_LIST{tf};
+				obj.Robust=obj.RobustList{tf};
 			else
 				throw(ME);
 			end
@@ -564,15 +685,15 @@ methods
 			throw(ME);
 		end
 	end
-	
-	function set.Algorithm(obj,x)
-		ME=MException('PeakFit:PeakFit:setAlgorithm:InvalidInput',...
-			['Input to set the Algorithm must be either: ', ...
-				strjoin(obj.ALGORITHM_LIST,', '),'.']);
+
+	function obj=set.Algorithm(obj,x)
+		ME=MException('PeakFit:setAlgorithm:InvalidInput',...
+			'Input to set the Algorithm must be either: %s.',...
+			strjoin(obj.AlgorithmList,', '));
 		if isstringscalar(x)
-			tf=strcmpi(x,obj.ALGORITHM_LIST);
+			tf=strcmpi(x,obj.AlgorithmList);
 			if any(tf)
-				obj.Algorithm=obj.ALGORITHM_LIST{tf};
+				obj.Algorithm=obj.AlgorithmList{tf};
 			else
 				throw(ME);
 			end
@@ -580,70 +701,214 @@ methods
 			throw(ME);
 		end
 	end
-	
-	function set.DiffMaxChange(obj,x)
+
+	function obj=set.MovMeanWidth(obj,x)
+		ME=MException('PeakFit:setMovMeanWidth:InvalidInput',...
+			['Input to set the MovMeanWidth must be a positive integer scalar ',...
+				'or a real scalar between [0,1].']);
+		if isrealscalar(x) && x>=0
+			if isintegerscalar(x) || x<=1
+				obj.MovMeanWidth=x;
+			else
+				throw(ME);
+			end
+		else
+			throw(ME);
+		end
+	end
+
+	function obj=set.DiffMaxChange(obj,x)
 		if isrealscalar(x) && x>0
 			obj.DiffMaxChange=x;
 		else
-			error('PeakFit:PeakFit:setDiffMaxChange:InvalidInput',...
+			error('PeakFit:setDiffMaxChange:InvalidInput',...
 				'Input to set the DiffMaxChange must be a positive real scalar.');
 		end
 	end
-	
-	function set.DiffMinChange(obj,x)
+
+	function obj=set.DiffMinChange(obj,x)
 		if isrealscalar(x) && x>0
 			obj.DiffMinChange=x;
 		else
-			error('PeakFit:PeakFit:setDiffMinChange:InvalidInput',...
+			error('PeakFit:setDiffMinChange:InvalidInput',...
 				'Input to set the DiffMinChange must be a positive real scalar.');
 		end
 	end
-	
-	function set.MaxFunEvals(obj,x)
+
+	function obj=set.MaxFunEvals(obj,x)
 		if isintegerscalar(x) && x>0
 			obj.MaxFunEvals=x;
 		else
-			error('PeakFit:PeakFit:setMaxFunEvals:InvalidInput',...
+			error('PeakFit:setMaxFunEvals:InvalidInput',...
 				'Input to set the MaxFunEvals must be a positive integer scalar.');
 		end
 	end
-	
-	function set.MaxIters(obj,x)
+
+	function obj=set.MaxIters(obj,x)
 		if isintegerscalar(x) && x>0
 			obj.MaxIters=x;
 		else
-			error('PeakFit:PeakFit:setMaxIters:InvalidInput',...
+			error('PeakFit:setMaxIters:InvalidInput',...
 				'Input to set the MaxIters must be a positive integer scalar.');
 		end
 	end
-	
-	function set.TolFun(obj,x)
+
+	function obj=set.TolFun(obj,x)
 		if isrealscalar(x) && x>0
 			obj.TolFun=x;
 		else
-			error('PeakFit:PeakFit:setTolFun:InvalidInput',...
+			error('PeakFit:setTolFun:InvalidInput',...
 				'Input to set the TolFun must be a positive real scalar.');
 		end
 	end
-	
-	function set.TolX(obj,x)
+
+	function obj=set.TolX(obj,x)
 		if isrealscalar(x) && x>0
 			obj.TolX=x;
 		else
-			error('PeakFit:PeakFit:setTolX:InvalidInput',...
+			error('PeakFit:setTolX:InvalidInput',...
 				'Input to set the TolX must be a positive real scalar.');
 		end
 	end
 	
+	function obj=set.Center(obj,x)
+		if ~isempty(x)
+			if isrealmatrix(x) && size(x,1)==3
+				obj.Center=x;
+			else
+				error('PeakFit:setCenter:InvalidInput',...
+					'Input to set the Center must be a real matrix with 3 rows.');
+			end
+		end
+	end
+	
+	function obj=set.Height(obj,x)
+		if ~isempty(x)
+			if isrealmatrix(x) && size(x,1)==3
+				obj.Height=x;
+			else
+				error('PeakFit:setHeight:InvalidInput',...
+					'Input to set the Height must be a real matrix with 3 rows.');
+			end
+		end
+	end
+	
+	function obj=set.Width(obj,x)
+		if ~isempty(x)
+			if isrealmatrix(x) && size(x,1)==3
+				obj.Width=x;
+			else
+				error('PeakFit:setWidth:InvalidInput',...
+					'Input to set the Width must be a real matrix with 3 rows.');
+			end
+		end
+	end
+	
+	function obj=set.Baseline(obj,x)
+		if ~isempty(x)
+			if isrealmatrix(x) && size(x,1)==3
+				obj.Baseline=x;
+			else
+				error('PeakFit:setBaseline:InvalidInput',...
+					'Input to set the Baseline must be a real matrix with 3 rows.');
+			end
+		end
+	end
+	
+	function obj=set.RelStDev(obj,x)
+		if isrealscalar(x) && x>=0
+			obj.RelStDev=x;
+		else
+			error('PeakFit:setRelStDev:InvalidInput',...
+				'Input to set the RelStDev must be a positive real scalar.');
+		end
+	end
+	
+	function obj=set.CoeffDeterm(obj,x)
+		if isrealscalar(x)
+			obj.CoeffDeterm=x;
+		else
+			error('PeakFit:setCoeffDeterm:InvalidInput',...
+				'Input to set the CoeffDeterm must be a real scalar.');
+		end
+	end
+	
+	function obj=set.AdjCoeffDeterm(obj,x)
+		if isrealscalar(x)
+			obj.AdjCoeffDeterm=x;
+		else
+			error('PeakFit:setAdjCoeffDeterm:InvalidInput',...
+				'Input to set the AdjCoeffDeterm must be a real scalar.');
+		end
+	end
+	
+	function obj=set.NumFunEvals(obj,x)
+		if isintegerscalar(x) && x>=0
+			obj.NumFunEvals=x;
+		else
+			error('PeakFit:setNumFunEvals:InvalidInput',...
+				'Input to set the NumFunEvals must be a positive integer scalar.');
+		end
+	end
+	
+	function obj=set.NumIters(obj,x)
+		if isintegerscalar(x) && x>=0
+			obj.NumIters=x;
+		else
+			error('PeakFit:setNumIters:InvalidInput',...
+				'Input to set the NumIters must be a positive integer scalar.');
+		end
+	end
+	
+	function obj=set.ExitFlag(obj,x)
+		if isempty(x)
+			obj.ExitFlag=[];
+		elseif isintegerscalar(x)
+			obj.ExitFlag=x;
+		else
+			error('PeakFit:setExitFlag:InvalidInput',...
+				'Input to set the ExitFlag must be an integer scalar.');
+		end
+	end
+	
+	% display the object properties
 	disp(obj)
-	set(obj,varargin)
-	value=get(obj,varargin)
-	fit(obj)
+	
+	% construct a fit model from the fit results
 	[yModel,yPeak,yBaseline]=model(obj,varargin)
+	
+	% convert units
+	obj=convertunit(obj,unitFrom,unitTo,varargin)
+end
+
+methods (Access=protected)
+	% fit peaks
+	obj=fit(obj)
+	
+	% find maxima
+	[xm,ym]=findmaxima(obj,varargin)
 end
 
 methods (Static=true)
-	obj2=clone(obj1)
+	% lorentzian function
+	y=fnlorentzian(x,c,h,w)
+	
+	% gaussian function
+	y=fngaussian(x,c,h,w)
+end
+
+methods (Static=true, Access=protected)
+	% compute the peak area
+	area=computearea(peakShape,height,width)
+	
+	% compute the peak height
+	height=computeheight(peakShape,area,width)
+	
+	% compute the peak width
+	width=computewidth(peakShape,area,height)
+	
+	% transform polynomial coefficients
+	p=transformpolycoeff(p,varargin)
 end
 
 end

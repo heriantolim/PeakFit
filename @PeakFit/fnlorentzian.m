@@ -1,5 +1,5 @@
 function y=fnlorentzian(x,c,h,w)
-%% A Lorentzian function with center c, height h, and FWHM w
+%% Lorentzian function with center c, height h, and FWHM w
 %
 % Copyright: Herianto Lim
 % http://heriantolim.com/
