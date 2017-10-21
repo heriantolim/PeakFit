@@ -1,2 +1,2 @@
 # PeakFit
-A set of peak fitting tools for spectroscopic data analysis using MATLAB.
+A set of peak fitting tools based on MATLAB for spectroscopic data analysis.
