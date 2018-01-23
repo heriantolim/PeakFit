@@ -1,5 +1,11 @@
 # PeakFit
-A set of peak fitting tools based on MATLAB for spectroscopic data analysis.
+This package provides a tool to fit a spectral curve with a linear combination of symmetric peak functions such as Gaussian or Lorentzian. The background component of the spectrum can be optionally taken into account by specifying the related parameters. In which case, the algorithm will attempt to fit the background with a polynomial function of the given order.
+
+The fit model is given by:
+
+f(x) ~ peak1(x) + peak2(x) + ... + polynomial(x)
+
+Each peak function is characterized by three coefficients: `Center`, `Width`, and either one of `Area` and `Height`. The polynomial function is characterized by n+1 coefficients, where n is the order of the polynomial.
 
 ## Tested On
 - MATLAB R2015 - R2017
@@ -12,7 +18,7 @@ A set of peak fitting tools based on MATLAB for spectroscopic data analysis.
 This software is licensed under the GNU General Public License (version 3). 
 
 ## Usage
-Construct the PeakFit object in the following ways and the fit results will be populated in the [public properties](https://github.com/heriantolim/PeakFit#public-properties) of the object.
+Construct the PeakFit object in the following ways, and the fit results will be populated in the object's [public properties](https://github.com/heriantolim/PeakFit#public-properties).
 
 ```MATLAB
 obj=PeakFit(Data, ... Name-Value ...)
@@ -53,6 +59,19 @@ Any of the [public properties](https://github.com/heriantolim/PeakFit#public-pro
 - `Window`: A vector of length two [a,b] that limits the fitting to only the data points whose X coordinates lies within [a,b].
 - `NumPeaks`: The number of peaks wished to be fitted. When the fitting peak shapes, start points, lower, or upper bounds are set with vectors of length greater than `NumPeaks`, then `NumPeaks` will be incremented to adjust to the maximum length of these vectors. When the maximum length of these vectors is less, then these vectors will be expanded and filled with the default values. When `NumPeaks`=0 and all the start point, lower, and upper are not set, then the program attempts to fit all peaks found in the curve. Defaults to 0.
 - `PeakShape`: A string vector that specifies the peak shape of each peak. The choices of `PeakShape` currently are: 'Lorentzian' (1) and 'Gaussian' (2). `PeakShape` may be set with an integer, the initial of these names, e.g. 'L' or 'G', or the full name, e.g. 'Lorentzian'. When the length of `PeakShape` is less than `NumPeaks`, the remaining peaks will be set with the default `PeakShape`, which is 'Lorentzian'. If PeakShape contains only one element, then the default value is the same as that element.
+- `BaselinePolyOrder`: An integer that specifies the order of the polynomial function used to fit the background of the spectrum. Defaults to 0 (a constant polynomial). Set this to a negative value to exclude the polynomial from the fit model.
+
+### Fit Results
+- (Read-only) `Peak`: A struct containing the fit results for each peak.
+- (Read-only) `Base`: A struct containing the fit results for the baseline.
+- (Read-only) `Area`, `Center`, `Height`, `Width`: A 3-by-`NumPeaks` matrix that stores the fit results for the area, center, height, and width, respectively; with each column correspond to the fit results for a particular peak. The first row holds the values at convergence; the second row holds the 95% CI lower bounds; and the third row holds the 95% CI upper bounds. Note that `Area` (or `Height`) is a redundant variable to the fit model, as it can be computed from `Width` and `Height` (or `Area`). Hence, it would be enough to specify the start points, lower or upper bounds for the `Area` or `Height` alone, as one can be computed from the other for any given `Width`.
+- (Read-only) `Baseline`: A 3-by-(n+1) matrix, where n=`BaselinePolyOrder`, that stores the fit results for the baseline. Elements in the i-th column correspond to the fit results for the x^(n-i+1) polynomial coefficient. The first row holds the values at convergence; the second row holds the 95% CI lower bounds; and the third row holds the 95% CI upper bounds.
+- (Read-only) `RelStDev`: The relative standard deviation of the fit results.
+- (Read-only) `CoeffDeterm`: The coefficient of determination of the fit results.
+- (Read-only) `AdjCoeffDeterm`: The degree-of-freedom adjusted coefficient of determination of the fit results.
+- (Read-only) `NumFunEvals`: The number of function evaluations.
+- (Read-only) `NumIters`: The number of iterations.
+- (Read-only) `ExitFlag`: Describes the exit condition of the algorithm. Positive flags indicate convergence, within tolerances. Zero flags indicate that the maximum number of function evaluations or iterations was exceeded. Negative flags indicate that the algorithm did not converge to a solution.
 
 ### Fitting Start Points
 - `AreaStart`, `CenterStart`, `WidthStart`, `HeightStart`, `BaselineStart`: A vector of initial values for the area, center, width, height, and baseline coefficients, respectively. The default values are determined heuristically. To make certain properties default, set their values to NaN. They will be then replaced with the default values upon fitting.
@@ -62,17 +81,6 @@ Any of the [public properties](https://github.com/heriantolim/PeakFit#public-pro
 
 ### Fitting Upper Bounds
 - `AreaUp`, `CenterUp`, `WidthUp`, `HeightUp`, `BaselineUp`: A vector of upper bounds for the area, center, width, height, and baseline coefficients, respectively. The default values are determined heuristically. To make certain properties default, set their values to Inf. They will be then replaced with the default values upon fitting.
-
-### Fit Results
-- (Read-only) `Peak`: A struct containing the fit results for each peak.
-- (Read-only) `Base`: A struct containing the fit results for the baseline.
-- (Read-only) `Area`, `Center`, `Height`, `Width`, `Baseline`: A 3-by-`NumPeaks` matrix that stores the fit results for the area, center, height, width, and baseline, respectively. The first row is the values at convergence; the second row is the 95% CI lower bounds; and the third row is the 95% CI upper bounds.
-- (Read-only) `RelStDev`: The relative standard deviation of the fit results.
-- (Read-only) `CoeffDeterm`: The coefficient of determination of the fit results.
-- (Read-only) `AdjCoeffDeterm`: The degree-of-freedom adjusted coefficient of determination of the fit results.
-- (Read-only) `NumFunEvals`: The number of function evaluations.
-- (Read-only) `NumIters`: The number of iterations.
-- (Read-only) `ExitFlag`: Describes the exit condition of the algorithm. Positive flags indicate convergence, within tolerances. Zero flags indicate that the maximum number of function evaluations or iterations was exceeded. Negative flags indicate that the algorithm did not converge to a solution.
 
 ### Algorithm Parameters
 - (Read-only) `Method` = 'NonLinearLeastSquares'; The method used for the fitting.
