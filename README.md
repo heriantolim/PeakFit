@@ -3,7 +3,7 @@ This package provides a tool to fit a spectral curve with a linear combination o
 
 The fit model is given by:
 
-f(x) ~ peak1(x) + peak2(x) + ... + polynomial(x)
+f(*x*) ~ peak1(*x*) + peak2(*x*) + ... + polynomial(*x*)
 
 Each peak function is characterized by three coefficients: `Center`, `Width`, and either one of `Area` and `Height`. The polynomial function is characterized by n+1 coefficients, where n is the order of the polynomial.
 
@@ -11,14 +11,15 @@ Each peak function is characterized by three coefficients: `Center`, `Width`, an
 This software is licensed under the GNU General Public License (version 3).
 
 ## Tested On
-- MATLAB R2015a - R2017b
+- MATLAB R2013b - R2017b
 
 ## Requirements
 - MATLAB Curve Fitting Toolbox
 - [PhysConst](https://github.com/heriantolim/PhysConst) - required when invoking the `convertunit` method
 
-## Installation
-
+## Setting Up
+1. Download or git-clone this repository and other repositories listed in the [Requirements](https://github.com/heriantolim/PeakFit#requirements).
+2. Add the repositories to the MATLAB's search path via `addpath(genpath( ... ))` OR this [version control system](https://github.com/heriantolim/MatlabVerCon).
 
 ## Usage
 Construct the PeakFit object in the following ways, and the fit results will be populated in the object's [public properties](https://github.com/heriantolim/PeakFit#public-properties).
@@ -58,8 +59,9 @@ The peak-fit settings can be specified after the mandatory arguments in Name-Val
 Any of the [public properties](https://github.com/heriantolim/PeakFit#public-properties) can be specified as arguments in Name-Value syntax during the object construction. Specifying other things as Name-Value arguments will return an error.
 
 ## Examples
+Examples will be added later in 2018. Stay tuned. :smile:
 
-## Best Practices
+### Best Practices
 
 ## Public Properties
 - `Data`, `XData`, `YData`: The data points of the curve to be fitted. Please ensure that the Y data points are all positive, otherwise the peak fitting may not work properly.
