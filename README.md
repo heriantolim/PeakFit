@@ -1,11 +1,11 @@
 # PeakFit
-This package provides a tool to fit a spectral curve with a linear combination of symmetric peak functions such as Gaussian or Lorentzian. The background component of the spectrum can be optionally taken into account by specifying the related parameters. In which case, the algorithm will attempt to fit the background with a polynomial function of the given order.
+**PeakFit** provides a tool to fit a spectral curve with a linear combination of symmetric peak functions such as Gaussian or Lorentzian. The background component of the spectrum can be optionally taken into account by specifying the related parameters. In which case, the algorithm will attempt to fit the background with a polynomial function of the given order.
 
 The fit model is given by:
 
-f(*x*) ~ peak1(*x*) + peak2(*x*) + ... + polynomial(*x*)
+f(*x*) ~ peak1(*x*) + peak2(*x*) + ... + peakN(*x*) + polynomial(*x*)
 
-Each peak function is characterized by three coefficients: `Center`, `Width`, and either one of `Area` and `Height`. The polynomial function is characterized by n+1 coefficients, where n is the order of the polynomial.
+Each peak function is characterized by three fit coefficients: `Center`, `Width`, and either one of `Area` and `Height`. The polynomial function is characterized by n+1 fit coefficients, where n is the order of the polynomial.
 
 ## Licensing
 This software is licensed under the GNU General Public License (version 3).
@@ -40,7 +40,7 @@ OR
 % Create an empty PeakFit object.
 obj=PeakFit();
 
-% Specify the data points and peak-fit settings via property assignments. 
+% Specify the data points and peak-fit settings via property assignments.
 obj.XData= ... ;
 obj.YData= ... ;
 obj.Property1Name=Value1;
@@ -53,7 +53,7 @@ obj=PeakFit(obj);
 
 `Data` must be specified as a two-column (or two-row) matrix where the first column (or first row) is the X data points and the second column (or second row) is the Y data points. In the alternative syntax, `XData` and `YData` are respectively the X and the Y data points, specified as vectors, of the curve to be fitted.
 
-The peak-fit settings can be specified after the mandatory arguments in Name-Value syntax, e.g. `PeakFit(Data, Window, [100,900], NumPeaks, 3)`. If no settings are specified, the algorithm will attempt to fit all peaks in the data using the default settings. The default behavior may not be optimal for noisy data. See [Best Practices](https://github.com/heriantolim/PeakFit#best-practices) for recommendations in making an optimal fit.
+The peak-fit settings can be specified after the mandatory arguments in Name-Value syntax, e.g. `PeakFit(Data, 'Window', [100,900], 'NumPeaks', 3)`. If no settings are specified, the algorithm will attempt to fit all peaks in the data using the default settings. The default behavior may not be optimal for noisy data. See [Best Practices](https://github.com/heriantolim/PeakFit#best-practices) for recommendations in making an optimal fit.
 
 ### Name-Value Pair Arguments
 Any of the [public properties](https://github.com/heriantolim/PeakFit#public-properties) can be specified as arguments in Name-Value syntax during the object construction. Specifying other things as Name-Value arguments will return an error.
@@ -65,7 +65,7 @@ Examples will be added later in 2018. Stay tuned. :smile:
 
 ## Public Properties
 - `Data`, `XData`, `YData`: The data points of the curve to be fitted. Please ensure that the Y data points are all positive, otherwise the peak fitting may not work properly.
-- `Window`: A vector of length two [a,b] that limits the fitting to only the data points whose X coordinates lies within [a,b].
+- `Window`: A vector of length two [*a*,*b*] that limits the fitting to only the data points whose X coordinates lies within [*a*,*b*].
 - `NumPeaks`: The number of peaks wished to be fitted. When the fitting peak shapes, start points, lower, or upper bounds are set with vectors of length greater than `NumPeaks`, then `NumPeaks` will be incremented to adjust to the maximum length of these vectors. When the maximum length of these vectors is less, then these vectors will be expanded and filled with the default values. When `NumPeaks`=0 and all the start point, lower, and upper are not set, then the program attempts to fit all peaks found in the curve. Defaults to 0.
 - `PeakShape`: A string vector that specifies the peak shape of each peak. The choices of `PeakShape` currently are: 'Lorentzian' (1) and 'Gaussian' (2). `PeakShape` may be set with an integer, the initial of these names, e.g. 'L' or 'G', or the full name, e.g. 'Lorentzian'. When the length of `PeakShape` is less than `NumPeaks`, the remaining peaks will be set with the default `PeakShape`, which is 'Lorentzian'. If PeakShape contains only one element, then the default value is the same as that element.
 - `BaselinePolyOrder`: An integer that specifies the order of the polynomial function used to fit the background of the spectrum. Defaults to 0, which means a constant polynomial. Set this to a negative value to exclude the polynomial from the fit model.
@@ -73,8 +73,8 @@ Examples will be added later in 2018. Stay tuned. :smile:
 ### Fit Results
 - (Read-only) `Peak`: A struct containing the fit results for each peak.
 - (Read-only) `Base`: A struct containing the fit results for the baseline.
-- (Read-only) `Area`, `Center`, `Height`, `Width`: A 3-by-`NumPeaks` matrix that stores the fit results for the area, center, height, and width, respectively; with each column correspond to the fit results for a particular peak. The first row holds the values at convergence; the second row holds the 95% CI lower bounds; and the third row holds the 95% CI upper bounds. Note that `Area` (or `Height`) is a redundant variable to the fit model, as it can be computed from `Width` and `Height` (or `Area`). Hence, it would be enough to specify the start points, lower or upper bounds for the `Area` or `Height` alone, as one can be computed from the other for any given `Width`.
-- (Read-only) `Baseline`: A 3-by-(n+1) matrix, where n=`BaselinePolyOrder`, that stores the fit results for the baseline. Elements in the i-th column correspond to the fit results for the x^(n-i+1) polynomial coefficient. The first row holds the values at convergence; the second row holds the 95% CI lower bounds; and the third row holds the 95% CI upper bounds.
+- (Read-only) `Area`, `Center`, `Height`, `Width`: A 3-by-`NumPeaks` matrix that stores the fit results for the area, center, height, and width, respectively; with each column correspond to the fit results for a particular peak. The first row holds the values at convergence, and the second (third) row holds the 95% CI lower (upper) bounds. Note that `Area` (or `Height`) is a redundant variable to the fit model, as it can be computed from `Width` and `Height` (or `Area`). Hence, it would be enough to specify the start points, lower or upper bounds for the `Area` or `Height` alone, as one can be computed from the other for any given `Width`.
+- (Read-only) `Baseline`: A 3-by-(n+1) matrix, where n=`BaselinePolyOrder`, that stores the fit results for the baseline. Elements in the i-th column correspond to the fit results for the x^(n-i+1) polynomial coefficient. The first row holds the values at convergence, and the second (third) row holds the 95% CI lower (upper) bounds.
 - (Read-only) `RelStDev`: The relative standard deviation of the fit results.
 - (Read-only) `CoeffDeterm`: The coefficient of determination of the fit results.
 - (Read-only) `AdjCoeffDeterm`: The degree-of-freedom adjusted coefficient of determination of the fit results.
@@ -95,13 +95,13 @@ Examples will be added later in 2018. Stay tuned. :smile:
 - (Read-only) `Method` = 'NonLinearLeastSquares'; The method used for the fitting.
 - `Robust`: The type of the least-squares method to be used in the fitting. Avaliable values are 'off', 'LAR' (least absolute residual method), and 'Bisquare' (bisquare weight method). Defaults to 'off'.
 - `Algorithm`: The algorithm to be used in the fitting. Available values are 'Lavenberg-Marquardt', 'Gauss-Newton', or 'Trust-Region'. Defaults to 'Trust-Region'.
-- `MovMeanWidth`: The window width of the moving average used for smoothing the curve in order to filter out the noise before finding the maximas. This parameter is used only when CenterStart is not given. The value of this can be set as a positive integer which specifies the width in terms of the number of data points, OR a real scalar between [0,1] which specifies the width as a fraction of the total number of data points.
+- `MovMeanWidth`: The window width of the moving average used for smoothing the curve in order to filter out the noise before finding the maximas. This parameter is used only when CenterStart is not given. The value of this can be set as a positive integer which specifies the width in terms of the number of data points, OR a real scalar between [0,1] which specifies the width as a fraction of the total number of data points. Defaults to 0.02.
 - `DiffMaxChange`: The maximum change in coefficients for finite difference gradients. Defaults to 0.1.
-- `DiffMinChange`: The minimum change in coefficients for finite difference gradients. Defaults to 10^-8.
-- `MaxFunEvals`: The allowed maximum number of evaluations of the model. Defaults to 50000.
-- `MaxIters`: The maximum number of iterations allowed for the fit. Defaults to 10000.
-- `TolFun`: The termination tolerance on the model value. Defaults to 10^-6.
-- `TolX`: The termination tolerance on the coefficient values. Defaults to 10^-6.
+- `DiffMinChange`: The minimum change in coefficients for finite difference gradients. Defaults to 1e-8.
+- `MaxFunEvals`: The allowed maximum number of evaluations of the model. Defaults to 1e5.
+- `MaxIters`: The maximum number of iterations allowed for the fit. Defaults to 1e3.
+- `TolFun`: The termination tolerance on the model value. Defaults to 1e-6.
+- `TolX`: The termination tolerance on the coefficient values. Defaults to 1e-6.
 
 ## Public Methods
 - `disp`: Displays the options, results, error and performance of the fitting.

@@ -5,42 +5,48 @@ classdef PeakFit
 %  included to represent a 'background' contribution to the spectra.
 %
 % Constructions:
-%  There are two ways to properly construct a PeakFit object.
+%  A PeakFit object can be constructed in two ways.
 %
 %  The first is by creating an empty PeakFit object and specifying the fitting
 %  parameters via property assignments as follows:
+%
 %  obj=PeakFit();% creates an empty PeakFit
 %  obj.XData=[...];% specify the X data points
 %  obj.YData=[...];% specify the Y data points
-%  obj.CenterStart=[...];% specify the start points of the peaks' center
-%  obj.WidthStart=[...];% specify the start points for the peaks' width
+%  obj.CenterStart=[...];% specify the start points of the peak centers
+%  obj.WidthStart=[...];% specify the start points for the peak widths
 %
 %  To perform the peak fitting, call another PeakFit with the prepared obj as
-%  the input argument.
+%  the input argument:
+%
 %  obj=PeakFit(obj);
 %
 %  The fit results will be stored in the object properties, which can be
 %  displayed into the console by calling:
+%
 %  disp(obj);
 %
 %  The second is by specifying the data points and fitting parameters together
 %  in one call as follows:
-%  obj=PeakFit(Data,...% specify the XData and YData
-%     Window,[...],...% specify the fit window
-%     CenterLow,[...],...% specify the lower bound for the peaks' center
-%     CenterUp,[...],...% specify the upper bound for the peaks' center
-%     WidthUp,[...],...% specify the upper bound for the peaks' width
-%     BaselinePolyOrder,[.]);% specify the order for the polynomial baseline.
+%
+%  obj=PeakFit(Data,...
+%     Window,[...],...
+%     CenterLow,[...],...
+%     CenterUp,[...],...
+%     WidthUp,[...],...
+%     BaselinePolyOrder,[.]);
+%
 %  The data points can also be specified in the following way:
+%
 %  obj=PeakFit(XData,YData,...);
 %
-%  When the data points are supplied in the construction of a PeakFit object,
-%  the fitting is automatically performed. The data points are the only
-%  mandatory inputs for a PeakFit object.
+%  The peak fitting will be performed automatically after the object
+%  construction, provided that the data points have been supplied. The data
+%  points are the only mandatory inputs for a PeakFit object.
 %  
-%  In most cases, specifying the following parameters:
-%  Window, CenterLow, CenterUp, WidthUp, and BaselinePolyOrder,
-%  as given in the last example, is sufficient to enable an accurate fitting.
+%  In most cases, specifying the following parameters: Window, CenterLow,
+%  CenterUp, WidthUp, and BaselinePolyOrder, would improve the accuracy of the
+%  peak fitting significantly.
 %
 % Public Properties:
 %  Data: The data points of the curve. An alternative to XData and YData. Data
