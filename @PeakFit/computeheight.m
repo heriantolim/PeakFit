@@ -3,8 +3,8 @@ function height=computeheight(peakShape,area,width)
 %  height=PeakFit.computeheight(peakShape,area,width) computes the height of a
 %  peak function of the specified peakShape, given its areas and widths.
 %
-% Copyright: Herianto Lim
-% http://heriantolim.com/
+% Copyright: Herianto Lim (http://heriantolim.com)
+% Licensing: GNU General Public License v3.0
 % First created: 25/03/2013
 % Last modified: 25/03/2013
 

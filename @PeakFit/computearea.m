@@ -3,8 +3,8 @@ function area=computearea(peakShape,height,width)
 %  area=PeakFit.computearea(peakShape,height,width) computes the area of a peak
 %  function of the specified peakShape, given its heights and widths.
 %
-% Copyright: Herianto Lim
-% http://heriantolim.com/
+% Copyright: Herianto Lim (http://heriantolim.com)
+% Licensing: GNU General Public License v3.0
 % First created: 25/03/2013
 % Last modified: 25/03/2013
 

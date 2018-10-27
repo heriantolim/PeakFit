@@ -122,13 +122,13 @@ classdef PeakFit
 %                 gradients. Defaults to 0.1.
 %
 %  DiffMinChange: The minimum change in coefficients for finite difference
-%                 gradients. Defaults to 10^-8.
+%                 gradients. Defaults to 1e-8.
 %
 %  MaxFunEvals: The allowed maximum number of evaluations of the model. Defaults
-%               to 50000.
+%               to 1e5.
 %
 %  MaxIters: The maximum number of iterations allowed for the fit. Defaults to
-%            10000.
+%            1e3.
 %
 %  TolFun: The termination tolerance on the model value. Defaults to 10^-6.
 %
@@ -183,7 +183,7 @@ classdef PeakFit
 %  fngaussian: The gaussian function.
 %
 % Requires package:
-%  - Common_v1.0.0+
+%  - MatCommon_v1.0.0+
 %  - PhysConst_v1.0.0+ (for the convertunit method only)
 %
 % Tested on:
@@ -191,8 +191,8 @@ classdef PeakFit
 %  - MATLAB R2015b
 %  - MATLAB R2017b
 %
-% Copyright: Herianto Lim
-% http://heriantolim.com/
+% Copyright: Herianto Lim (http://heriantolim.com)
+% Licensing: GNU General Public License v3.0
 % First created: 25/03/2013
 % Last modified: 04/11/2016
 

@@ -13,13 +13,13 @@ function [yModel,yPeak,yBaseline]=model(obj,varargin)
 %  yBaseline: The reconstructed baseline points.
 %
 % Requires package:
-%  - Common_v1.0.0+
+%  - MatCommon_v1.0.0+
 %
 % Tested on:
 %  - MATLAB R2013b
 %
-% Copyright: Herianto Lim
-% http://heriantolim.com/
+% Copyright: Herianto Lim (http://heriantolim.com)
+% Licensing: GNU General Public License v3.0
 % First created: 04/04/2013
 % Last modified: 25/10/2016
 
@@ -41,7 +41,7 @@ if nargin==1
 	xModel=obj.XData;
 elseif nargin>2
 	error('PeakfFit:model:TooManyInput',...
-		'At most one input argument is accepted.');
+		'At most one input argument can be taken.');
 elseif isrealvector(varargin{1})
 	xModel=varargin{1};
 else

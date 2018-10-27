@@ -1,8 +1,8 @@
 function disp(obj)
 %% Display Object Properties
 %
-% Copyright: Herianto Lim
-% http://heriantolim.com/
+% Copyright: Herianto Lim (http://heriantolim.com)
+% Licensing: GNU General Public License v3.0
 % First created: 08/04/2013
 % Last modified: 25/10/2016
 

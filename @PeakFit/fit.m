@@ -16,8 +16,8 @@ function obj=fit(obj)
 %  - MATLAB R2013b
 %  - MATLAB R2015b
 %
-% Copyright: Herianto Lim
-% http://heriantolim.com/
+% Copyright: Herianto Lim (http://heriantolim.com)
+% Licensing: GNU General Public License v3.0
 % First created: 15/03/2013
 % Last modified: 06/11/2016
 

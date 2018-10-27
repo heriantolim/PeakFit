@@ -16,15 +16,15 @@ function obj=convertunit(obj,unitFrom,unitTo,varargin)
 %    Raman shift at 532nm excitation.
 %
 % Requires package:
-%  - Common_v1.0.0+
+%  - MatCommon_v1.0.0+
 %  - PhysConst_v1.0.0+
 %
 % Tested on:
 %  - MATLAB R2013b
 %  - MATLAB R2015b
 %
-% Copyright: Herianto Lim
-% http://heriantolim.com/
+% Copyright: Herianto Lim (http://heriantolim.com)
+% Licensing: GNU General Public License v3.0
 % First created: 27/10/2016
 % Last modified: 27/10/2016
 

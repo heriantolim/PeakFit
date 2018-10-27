@@ -18,14 +18,14 @@ function [xm,ym]=findmaxima(obj,varargin)
 %  moving mean.
 %
 % Requires package:
-%  - Common_v1.0.0+
+%  - MatCommon_v1.0.0+
 %
 % Tested on:
 %  - MATLAB R2013b
 %  - MATLAB R2015b
 %
-% Copyright: Herianto Lim
-% http://heriantolim.com/
+% Copyright: Herianto Lim (http://heriantolim.com)
+% Licensing: GNU General Public License v3.0
 % First created: 27/03/2013
 % Last modified: 05/11/2016
 

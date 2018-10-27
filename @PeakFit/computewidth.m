@@ -3,8 +3,8 @@ function width=computewidth(peakShape,area,height)
 %  width=PeakFit.computewidth(peakShape,area,height) computes the width of a
 %  peak function of the specified peakShape, given its area and height.
 %
-% Copyright: Herianto Lim
-% http://heriantolim.com/
+% Copyright: Herianto Lim (http://heriantolim.com)
+% Licensing: GNU General Public License v3.0
 % First created: 25/03/2013
 % Last modified: 25/03/2013
 
