@@ -21,8 +21,8 @@ S.Fit=PeakFit(S.Data,'PeakShape','Lorentzian');
 %% Plotting
 % Settings.
 Groot.usedefault();
-Groot.usedefault('latex',11,.7);
-RESOLUTION=300;
+Groot.usedefault('latex',8,.6);
+RESOLUTION=200;
 AXES_SIZE=[12,4];
 TICK_LENGTH=.2;
 
@@ -48,13 +48,13 @@ fixticklength(.2);
 N=S.Fit.NumPeaks;
 h=plot(xData,yData,'Color','b');
 for j=1:N
-	plot(xModel,yBaseline+yPeak{j},'Color','r','LineWidth',.5);
+	plot(xModel,yBaseline+yPeak{j},'Color','r','LineWidth',.3);
 end
-h(2)=plot(xModel,yModel,'Color','g','LineWidth',.5);
+h(2)=plot(xModel,yModel,'Color','g','LineWidth',.3);
 
 % Peak labels.
 h=Label.peak(S.Fit.Center(1,:),'StringFormat','%.1f','FontColor',[.3,.3,.3],...
-	'FontSize',9,'LineWidth',0,'MinYPos',.1,'MinYDist',.01,'PlotLine',h);
+	'LineWidth',0,'MinYPos',.1,'MinYDist',.01,'PlotLine',h);
 
 % Reconfigure the axes.
 extent=vertcat(h.Extent);
