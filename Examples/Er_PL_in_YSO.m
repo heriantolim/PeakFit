@@ -22,7 +22,7 @@ S.Fit=PeakFit(S.Data,'PeakShape','Lorentzian');
 % Settings.
 Groot.usedefault();
 Groot.usedefault('latex',8,.6);
-RESOLUTION=200;
+RESOLUTION=300;
 AXES_SIZE=[12,4];
 TICK_LENGTH=.2;
 
