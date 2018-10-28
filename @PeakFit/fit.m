@@ -78,9 +78,16 @@ y=c*y+d;
 n=[numel(obj.CenterStart),numel(obj.CenterLow),numel(obj.CenterUp),...
 	numel(obj.HeightStart),numel(obj.HeightLow),numel(obj.HeightUp),...
 	numel(obj.WidthStart),numel(obj.WidthLow),numel(obj.WidthUp),...
-	numel(obj.AreaStart),numel(obj.AreaLow),numel(obj.AreaUp),...
-	numel(obj.PeakShape),obj.NumPeaks];
-np=max(n);
+	numel(obj.AreaStart),numel(obj.AreaLow),numel(obj.AreaUp),obj.NumPeaks];
+np=numel(obj.PeakShape);
+if np>1
+	np=max(max(n),np);
+else
+	if np==0
+		obj.PeakShape=obj.DefaultPeakShape;
+	end
+	np=max(n);
+end
 
 % Initialize the constraint and peak shape arrays
 if np==0
@@ -91,7 +98,7 @@ if np==0
 	height=[HEIGHT_START*ym;nan(2,np)];
 	width=nan(3,np);
 	area=nan(3,np);
-	ps=repmat(obj.DefaultPeakShape,1,np);
+	ps=repmat(obj.PeakShape,1,np);
 else
 	% Fill the blank constraints with NaN
 	n=np-n;

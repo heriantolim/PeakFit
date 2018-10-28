@@ -157,11 +157,11 @@ classdef PeakFit
 %
 %  NumIters: The number of iterations.
 %
-%  ExitFlag: Describes the exit condition of the algorithm. Positive flags
-%            indicate convergence, within tolerances. Zero flags indicate that
-%            the maximum number of function evaluations or iterations was
-%            exceeded. Negative flags indicate that the algorithm did not
-%            converge to a solution.
+%  ExitFlag: The exit condition of the algorithm. Positive flags indicate
+%            convergence, within tolerances. Zero flags indicate that the
+%            maximum number of function evaluations or iterations was exceeded.
+%            Negative flags indicate that the algorithm did not converge to a
+%            solution.
 %
 % Public Methods:
 %  disp: Displays the options, results, error and performance of the fitting.
@@ -190,6 +190,7 @@ classdef PeakFit
 %  - MATLAB R2013b
 %  - MATLAB R2015b
 %  - MATLAB R2017b
+%  - MATLAB R2018a
 %
 % Copyright: Herianto Lim (http://heriantolim.com)
 % Licensing: GNU General Public License v3.0
