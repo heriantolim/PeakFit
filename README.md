@@ -61,14 +61,21 @@ The peak-fit settings can be specified after the mandatory arguments in Name-Val
 Any of the [public properties](https://github.com/heriantolim/PeakFit#public-properties) can be specified as arguments in Name-Value syntax during the object construction. Specifying other things as Name-Value arguments will return an error.
 
 ## Examples
-Examples will be added later in 2018. Stay tuned. :smile:
+### Default Behavior
+If the `PeakFit` is called without specifying the number of peaks, start points, or lower or upper bounds, then the algorithm will attempt to fit all peaks that it can it can guess. The following image is a photoluminescence spectrum of Erbium in Y<sub>2</sub>SiO<sub>5</sub> at near-liquid temperature. The spectrum was fitted using the command:
+```MATLAB
+Fit=PeakFit(Data,'PeakShape','Lorentzian');
+```
+The full code is given in [Examples/Er_PL_in_YSO.m](/Examples/Er_PL_in_YSO.m). It can be seen that many of the peaks were not resolved properly, and only the tallest peaks were correctly identified.
+
+![Er PL in YSO](/Examples/Er_PL_in_YSO.png)
 
 ### Best Practices
 
 ## Public Properties
 - `Data`, `XData`, `YData`: The data points of the curve to be fitted. Please ensure that the Y data points are all positive, otherwise the peak fitting may not work properly.
 - `Window`: A vector of length two [*a*, *b*] that limits the fitting to only the data points whose X coordinates lies within [*a*, *b*].
-- `NumPeaks`: The number of peaks wished to be fitted. When the fitting peak shapes, start points, lower, or upper bounds are set with vectors of length greater than `NumPeaks`, then `NumPeaks` will be incremented to adjust to the maximum length of these vectors. When the maximum length of these vectors is less, then these vectors will be expanded and filled with the default values. When `NumPeaks`=0 and all the start point, lower, and upper are not set, then the program will attempt to fit all peaks that can be found in the curve. Defaults to 0.
+- `NumPeaks`: The number of peaks wished to be fitted. When the fitting peak shapes, start points, lower, or upper bounds are set with vectors of length greater than `NumPeaks`, then `NumPeaks` will be incremented to adjust to the maximum length of these vectors. When the maximum length of these vectors is less, then these vectors will be expanded and filled with the default values. When `NumPeaks`=0 and all the start point, lower, and upper are not set, then the algorithm will attempt to fit all peaks that it can guess in the curve. Defaults to 0.
 - `PeakShape`: A string vector that specifies the peak shape of each peak. The choices of `PeakShape` currently are: 'Lorentzian' (1) and 'Gaussian' (2). `PeakShape` may be set with an integer, the initial of these names, e.g. 'L' or 'G', or the full name, e.g. 'Lorentzian'. When the length of `PeakShape` is less than `NumPeaks`, the remaining peaks will be set with the default `PeakShape`, which is 'Lorentzian'. If PeakShape contains only one element, then the default value is the same as that element.
 - `BaselinePolyOrder`: An integer that specifies the order of the polynomial function used to fit the background of the spectrum. Defaults to 0, which means a constant polynomial. Set this to a negative value to exclude the polynomial from the fit model.
 
