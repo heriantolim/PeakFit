@@ -62,15 +62,24 @@ Any of the [public properties](https://github.com/heriantolim/PeakFit#public-pro
 
 ## Examples
 ### Default Behavior
-If the `PeakFit` is called without specifying the number of peaks, start points, or lower or upper bounds, then the algorithm will attempt to fit all peaks that it can it can guess. The following image is a photoluminescence spectrum of Erbium in Y<sub>2</sub>SiO<sub>5</sub> at near-liquid temperature. The spectrum was fitted using the command:
+If the `PeakFit` is called without specifying the number of peaks, start points, or lower or upper bounds, then the algorithm will attempt to fit all peaks that it can it can guess. The following image is a photoluminescence spectrum of Er<sup>3+</sup> in Y<sub>2</sub>SiO<sub>5</sub> at near-liquid N<sub>2</sub> temperature. The spectrum was fitted using the command:
 ```MATLAB
-Fit=PeakFit(Data,'PeakShape','Lorentzian');
+Fit=PeakFit(Data, 'PeakShape', 'Lorentzian');
 ```
 The full code is given in [Examples/Er_PL_in_YSO.m](/Examples/Er_PL_in_YSO.m). It can be seen that many of the peaks were not resolved properly, and only the tallest peaks were correctly identified.
 
 ![Er PL in YSO](/Examples/Er_PL_in_YSO.png)
 
 ### Best Practices
+The PeakFit algorithm works best if the lower and upper bound of the peak `Center`, the upper bound of the peak `Width`, and the baseline polynomial order are specified, as done in the following example. The following Raman spectrum of VO<sub>2</sub>, taken at near-liquid N<sub>2</sub> temperature ([Lim2014](https://doi.org/10.1063/1.4867481)), was fitted using the command:
+```MATLAB
+Fit=PeakFit(Data, 'PeakShape', 'Lorentzian', ...
+    'CenterLow', [...], ...
+    'CenterUp', [...], ...
+    'WidthUp', [...], ...
+    'BaselinePolyOrder', 1);
+```
+The full code is given in
 
 ## Public Properties
 - `Data`, `XData`, `YData`: The data points of the curve to be fitted. Please ensure that the Y data points are all positive, otherwise the peak fitting may not work properly.
