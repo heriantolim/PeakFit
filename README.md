@@ -27,30 +27,30 @@ This software is licensed under the GNU General Public License (version 3).
 Construct the PeakFit object in the following ways, and the fit results will be populated in the object's [public properties](https://github.com/heriantolim/PeakFit#public-properties).
 
 ```MATLAB
-obj=PeakFit(Data, ... Name-Value ...)
+obj = PeakFit(Data, ... Name-Value ...)
 ```
 
 OR
 
 ```MATLAB
-obj=PeakFit(XData, YData, ... Name-Value ...)
+obj = PeakFit(XData, YData, ... Name-Value ...)
 ```
 
 OR
 
 ```MATLAB
 % Create an empty PeakFit object.
-obj=PeakFit();
+obj = PeakFit();
 
 % Specify the data points and peak-fit settings via property assignments.
-obj.XData= ... ;
-obj.YData= ... ;
-obj.Property1Name=Value1;
-obj.Property2Name=Value2;
+obj.XData = ... ;
+obj.YData = ... ;
+obj.Property1Name = Value1;
+obj.Property2Name = Value2;
 ...
 
 % Perform the peak fitting by reinstantiating the PeakFit object.
-obj=PeakFit(obj);
+obj = PeakFit(obj);
 ```
 
 `Data` must be specified as a two-column (or two-row) matrix where the first column (or first row) is the X data points and the second column (or second row) is the Y data points. In the alternative syntax, `XData` and `YData` are respectively the X and the Y data points, specified as vectors, of the curve to be fitted.
@@ -64,7 +64,7 @@ Any of the [public properties](https://github.com/heriantolim/PeakFit#public-pro
 ### Default Behavior
 If the `PeakFit` is called without specifying the number of peaks, start points, or lower or upper bounds, then the algorithm will attempt to fit all peaks that it can it can guess. The following image is a photoluminescence spectrum of Er<sup>3+</sup> in Y<sub>2</sub>SiO<sub>5</sub> at near-liquid N<sub>2</sub> temperature. The spectrum was fitted using the command:
 ```MATLAB
-Fit=PeakFit(Data, 'PeakShape', 'Lorentzian');
+Fit = PeakFit(Data, 'PeakShape', 'Lorentzian');
 ```
 The full code is given in [Examples/Er_PL_in_YSO.m](/Examples/Er_PL_in_YSO.m). It can be seen that many of the peaks were not resolved properly, and only the tallest peaks were correctly identified.
 
@@ -73,13 +73,15 @@ The full code is given in [Examples/Er_PL_in_YSO.m](/Examples/Er_PL_in_YSO.m). I
 ### Best Practices
 The PeakFit algorithm works best if the lower and upper bound of the peak `Center`, the upper bound of the peak `Width`, and the baseline polynomial order are specified, as done in the following example. The following Raman spectrum of VO<sub>2</sub>, taken at near-liquid N<sub>2</sub> temperature ([Lim2014](https://doi.org/10.1063/1.4867481)), was fitted using the command:
 ```MATLAB
-Fit=PeakFit(Data, 'PeakShape', 'Lorentzian', ...
+Fit = PeakFit(Data, 'PeakShape', 'Lorentzian', ...
     'CenterLow', [...], ...
     'CenterUp', [...], ...
     'WidthUp', [...], ...
-    'BaselinePolyOrder', 1);
+    'BaselinePolyOrder', n);
 ```
-The full code is given in
+The full code is given in [Examples/VO2_Raman.m](/Examples/VO2_Raman.m). Constructing the constraints for the fitting often require guess work, but the constraints do not have to be narrow to get a good accuracy. In some cases, the approximate locations of the peaks are known in the literature, and the fit constraints can be defined from this knowledge.
+
+![VO2 Raman](/Examples/VO2_Raman.png)
 
 ## Public Properties
 - `Data`, `XData`, `YData`: The data points of the curve to be fitted. Please ensure that the Y data points are all positive, otherwise the peak fitting may not work properly.
@@ -110,7 +112,7 @@ The full code is given in
 - `AreaUp`, `CenterUp`, `WidthUp`, `HeightUp`, `BaselineUp`: A vector of upper bounds for the area, center, width, height, and baseline coefficients, respectively. The default values are determined heuristically. To make certain properties default, set their values to Inf. They will be then replaced with the default values upon fitting.
 
 ### Algorithm Parameters
-- (Read-only) `Method` = 'NonLinearLeastSquares'; The method used for the fitting.
+- (Read-only) `Method`='NonLinearLeastSquares'; The method used for the fitting.
 - `Robust`: The type of the least-squares method to be used in the fitting. Avaliable values are 'off', 'LAR' (least absolute residual method), and 'Bisquare' (bisquare weight method). Defaults to 'off'.
 - `Algorithm`: The algorithm to be used in the fitting. Available values are 'Lavenberg-Marquardt', 'Gauss-Newton', or 'Trust-Region'. Defaults to 'Trust-Region'.
 - `MovMeanWidth`: The window width of the moving average used for smoothing the curve in order to filter out the noise before finding the maximas. This parameter is used only when CenterStart is not given. The value of this can be set as a positive integer which specifies the width in terms of the number of data points, OR a real scalar between 0 and 1 which specifies the width as a fraction of the total number of data points. Defaults to 0.02.
