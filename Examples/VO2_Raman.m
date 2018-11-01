@@ -14,8 +14,7 @@ clear;
 % Load data. If fails, adjust the file path supplied to the argument.
 S=load('VO2_Raman.mat');
 
-% Perform Lorentzian peak fitting with default values.
-% The algorithm will attempt to find all the peaks in the spectrum.
+% Perform Lorentzian peak fitting.
 S.Fit=PeakFit(S.Data,'Window',[100,900],'PeakShape','Lorentzian',...
 	'CenterLow',[521,145,198,224,258,304,310,336,387,394,430,503,588,615,665,827],...
 	'CenterUp', [524,151,202,228,263,306,315,342,394,402,450,506,597,625,675,837],...
