@@ -62,7 +62,7 @@ Any of the [public properties](https://github.com/heriantolim/PeakFit#public-pro
 
 ## Examples
 ### Default Behavior
-If the `PeakFit` is called without specifying the number of peaks, start points, or lower or upper bounds, then the algorithm will attempt to fit all peaks that it can it can guess. The following image is a photoluminescence spectrum of Er<sup>3+</sup> in Y<sub>2</sub>SiO<sub>5</sub> at near-liquid N<sub>2</sub> temperature. The spectrum was fitted using the command:
+If the `PeakFit` is called without specifying the number of peaks, start points, or lower or upper bounds, then the algorithm will attempt to fit all peaks that it can guess. The following image is a photoluminescence spectrum of Er<sup>3+</sup> in Y<sub>2</sub>SiO<sub>5</sub> at near-liquid N<sub>2</sub> temperature. The spectrum was fitted using the command:
 ```MATLAB
 Fit = PeakFit(Data, 'PeakShape', 'Lorentzian');
 ```
