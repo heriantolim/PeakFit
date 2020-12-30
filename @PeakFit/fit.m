@@ -114,12 +114,12 @@ else
 	area=[a*c*obj.AreaStart,nan(1,n(10));
 		a*c*obj.AreaLow,nan(1,n(11));
 		a*c*obj.AreaUp,nan(1,n(12))];
-	if n(13)+1==np
+	if n(13)==0
 		ps=repmat(obj.PeakShape,1,np);
 	else
 		ps=[obj.PeakShape,repmat(obj.DefaultPeakShape,1,n(13))];
 	end
-	
+
 	% If lower bounds exceed upper bounds, swap them
 	for j=1:np
 		if center(2,j)>center(3,j)
@@ -289,7 +289,7 @@ if bp>0
 		w=w/numel(x);
 	end
 	baseline(bp)=mean(y(x<=w/2));
-	
+
 	% Use a fibonacci sequence to define the lower and upper bounds
 	n=bp+1;
 	w=ones(1,n);
